@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Online Doctor Appointment System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+        h1 { background: #333; color: #fff; padding: 10px; text-align: center; }
+        .container { padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; }
+        .form-group label { display: block; margin-bottom: 5px; }
+        button { padding: 10px 20px; background: #333; color: #fff; border: none; cursor: pointer; }
+        button:hover { background: #555; }
+        .appointments { margin-top: 20px; }
+        .appointment { background: #fff; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Online Doctor Appointment System</h1>
+    <div class="container">
+        <h2>Book an Appointment</h2>
+        <div class="form-group">
+            <label for="patient_name">Patient Name</label>
+            <input type="text" id="patient_name">
+        </div>
+        <div class="form-group">
+            <label for="doctor_name">Doctor</label>
+            <select id="doctor_name"></select>
+        </div>
+        <div class="form-group">
+            <label for="appointment_date">Appointment Date</label>
+            <input type="datetime-local" id="appointment_date">
+        </div>
+        <button onclick="bookAppointment()">Book Appointment</button>
+        <h2>Appointments</h2>
+        <div class="appointments" id="appointments"></div>
+    </div>
+
+    <script>
+        async function loadDoctors() {
+            const response = await fetch('/doctors');
+            const doctors = await response.json();
+            const doctorSelect = document.getElementById('doctor_name');
+            doctors.forEach(doctor => {
+                const option = document.createElement('option');
+                option.value = doctor.name;
+                option.textContent = doctor.name;
+                doctorSelect.appendChild(option);
+            });
+        }
+
+        async function bookAppointment() {
+            const patientName = document.getElementById('patient_name').value;
+            const doctorName = document.getElementById('doctor_name').value;
+            const appointmentDate = document.getElementById('appointment_date').value;
+            await fetch('/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patient_name: patientName, doctor_name: doctorName, appointment_date: appointmentDate })
+            });
+            loadAppointments();
+        }
+
+        async function loadAppointments() {
+            const response = await fetch('/appointments');
+            const appointments = await response.json();
+            const appointmentsDiv = document.getElementById('appointments');
+            appointmentsDiv.innerHTML = '';
+            appointments.forEach(appointment => {
+                const div = document.createElement('div');
+                div.className = 'appointment';
+                div.textContent = `${appointment.patient_name} has an appointment with Dr. ${appointment.doctor_name} on ${new Date(appointment.appointment_date).toLocaleString()}`;
+                appointmentsDiv.appendChild(div);
+            });
+        }
+
+        loadDoctors();
+        loadAppointments();
+    </script>
+</body>
+</html>
